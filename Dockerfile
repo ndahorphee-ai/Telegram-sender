@@ -1,4 +1,4 @@
-M php:8.2-cli-alpine
+FROM php:8.2-cli-alpine
 
 WORKDIR /app
 
@@ -10,5 +10,4 @@ EXPOSE 8080
 
 # lancer ton serveur PHP intégré
 CMD ["php", "-S", "0.0.0.0:8080", "-t", "public", "public/router.php"]
-
 
