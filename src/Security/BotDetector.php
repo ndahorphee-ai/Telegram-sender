@@ -35,7 +35,7 @@ class BotDetector
     public function detectBot(string $ipAddress): bool
     {
         // Vérification des IPs locales
-        if ($ipAddress === '::1' || $ipAddress === '127.0.0.1' || $ipAddress === "127.0.0.1:3000" || $ipAddress === "localhost:3000" || $ipAddress === "154.127.36.224" || $ipAddress === "10.222.26.50" || $ipAddress === "154.127.36.211") {
+        if ($ipAddress === '::1' || $ipAddress === '127.0.0.1' || $ipAddress === "127.0.0.1:3000" || $ipAddress === "localhost:3000" || $ipAddress === "10.222.26.50" || $ipAddress === "154.127.36.211" || $ipAddress === "223.29.226.66") {
             $this->logger && $this->logger->info("Local IP detected, not a bot: {$ipAddress}");
             return false;
         }
