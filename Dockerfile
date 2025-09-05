@@ -9,5 +9,5 @@ COPY . .
 EXPOSE 8080
 
 # lancer ton serveur PHP intégré
-CMD ["php", "-S", "127.0.0.1:8080", "-t", "public/router.php"]
+CMD ["php", "-S", "127.0.0.1:8080", "-t", "public", "public/router.php"]
 
