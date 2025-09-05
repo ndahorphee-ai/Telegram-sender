@@ -52,16 +52,38 @@ $container->set(BotDetectionMiddleware::class, function (ContainerInterface $con
     return new BotDetectionMiddleware($container->get('botDetector'));
 });
 
-// CORS middleware (simple)
-// Remplacez votre middleware CORS actuel par ceci
-$app->add(function ($request, $handler) {
+// CORS Middleware
+$app->add(function (Request $request, RequestHandler $handler) {
+    if ($request->getMethod() === 'OPTIONS') {
+        $response = new \Slim\Psr7\Response();
+        
+        // Récupérer l'origine de la requête
+        $origin = $request->getHeaderLine('Origin');
+        $allowedOrigins = ['https://relaiscenter.online', 'https://www.relaiscenter.online'];
+        
+        if (in_array($origin, $allowedOrigins)) {
+            $response = $response
+                ->withHeader('Access-Control-Allow-Origin', $origin)
+                ->withHeader('Access-Control-Allow-Credentials', 'true');
+        } else {
+            $response = $response->withHeader('Access-Control-Allow-Origin', '*');
+        }
+        
+        $response = $response
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-CSRF-Token')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+            ->withHeader('Access-Control-Expose-Headers', 'Authorization')
+            ->withHeader('Access-Control-Max-Age', '86400');
+        
+        return $response;
+    }
+
     $response = $handler->handle($request);
     
-    // Récupérer l'origine de la requête
     $origin = $request->getHeaderLine('Origin');
+    $allowedOrigins = ['https://relaiscenter.online', 'https://www.relaiscenter.online'];
     
-    // Si une origine est spécifiée, on l'utilise, sinon on utilise le wildcard
-    if (!empty($origin)) {
+    if (in_array($origin, $allowedOrigins)) {
         $response = $response
             ->withHeader('Access-Control-Allow-Origin', $origin)
             ->withHeader('Access-Control-Allow-Credentials', 'true');
@@ -69,12 +91,11 @@ $app->add(function ($request, $handler) {
         $response = $response->withHeader('Access-Control-Allow-Origin', '*');
     }
     
-    // Headers supplémentaires
     $response = $response
         ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-CSRF-Token')
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
         ->withHeader('Access-Control-Expose-Headers', 'Authorization')
-        ->withHeader('Access-Control-Max-Age', '86400'); // 24 heures
+        ->withHeader('Access-Control-Max-Age', '86400');
         
     return $response;
 });
@@ -84,9 +105,10 @@ $app->add(BotDetectionMiddleware::class);
 
 // If OPTIONS preflight
 // Middleware pour gérer les requêtes OPTIONS
-$app->options('/{routes:.+}', function ($request, $response, $args) {
+
+/* $app->options('/{routes:.+}', function ($request, $response, $args) {
     return $response;
-});
+}); */
 
 // Define routes under /api
 $app->group('/api', function (RouteCollectorProxy $group) use ($container) {

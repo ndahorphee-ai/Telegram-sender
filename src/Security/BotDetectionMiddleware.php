@@ -19,6 +19,11 @@ class BotDetectionMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        // Skip bot detection for OPTIONS requests
+        if ($request->getMethod() === 'OPTIONS') {
+            return $handler->handle($request);
+        }
+        
         // Récupération de l'adresse IP du client
         $serverParams = $request->getServerParams();
         $ipAddress = $serverParams['REMOTE_ADDR'] ?? '';
