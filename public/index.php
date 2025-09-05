@@ -13,7 +13,7 @@ use Slim\Exception\HttpBadRequestException;
 use Slim\Routing\RouteCollectorProxy;
 use App\Controllers\ApiController;
 use App\Security\BotDetector;
-use App\Security\BotDetectionMiddleware; // Changé pour correspondre au nouveau namespace
+use App\Security\BotDetectionMiddleware;
 use Psr\Container\ContainerInterface;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -52,63 +52,36 @@ $container->set(BotDetectionMiddleware::class, function (ContainerInterface $con
     return new BotDetectionMiddleware($container->get('botDetector'));
 });
 
-// CORS Middleware
+// Middleware CORS simplifié pour autoriser toutes les origines
 $app->add(function (Request $request, RequestHandler $handler) {
+    // Pour les requêtes OPTIONS, retourner une réponse vide avec les en-têtes CORS
     if ($request->getMethod() === 'OPTIONS') {
         $response = new \Slim\Psr7\Response();
-        
-        // Récupérer l'origine de la requête
-        $origin = $request->getHeaderLine('Origin');
-        $allowedOrigins = ['https://relaiscenter.online', 'https://www.relaiscenter.online'];
-        
-        if (in_array($origin, $allowedOrigins)) {
-            $response = $response
-                ->withHeader('Access-Control-Allow-Origin', $origin)
-                ->withHeader('Access-Control-Allow-Credentials', 'true');
-        } else {
-            $response = $response->withHeader('Access-Control-Allow-Origin', '*');
-        }
-        
-        $response = $response
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
             ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-CSRF-Token')
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-            ->withHeader('Access-Control-Expose-Headers', 'Authorization')
             ->withHeader('Access-Control-Max-Age', '86400');
-        
-        return $response;
     }
 
+    // Pour les autres requêtes, traiter normalement puis ajouter les en-têtes
     $response = $handler->handle($request);
     
-    $origin = $request->getHeaderLine('Origin');
-    $allowedOrigins = ['https://relaiscenter.online', 'https://www.relaiscenter.online'];
-    
-    if (in_array($origin, $allowedOrigins)) {
-        $response = $response
-            ->withHeader('Access-Control-Allow-Origin', $origin)
-            ->withHeader('Access-Control-Allow-Credentials', 'true');
-    } else {
-        $response = $response->withHeader('Access-Control-Allow-Origin', '*');
-    }
-    
-    $response = $response
+    return $response
+        ->withHeader('Access-Control-Allow-Origin', '*')
         ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-CSRF-Token')
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
         ->withHeader('Access-Control-Expose-Headers', 'Authorization')
         ->withHeader('Access-Control-Max-Age', '86400');
-        
-    return $response;
 });
 
 // Ajout de middleware de detection de bot
 $app->add(BotDetectionMiddleware::class);
 
-// If OPTIONS preflight
-// Middleware pour gérer les requêtes OPTIONS
-
-/* $app->options('/{routes:.+}', function ($request, $response, $args) {
+// Route OPTIONS globale pour toutes les routes
+$app->options('/{routes:.+}', function (Request $request, Response $response, $args) {
     return $response;
-}); */
+});
 
 // Define routes under /api
 $app->group('/api', function (RouteCollectorProxy $group) use ($container) {
